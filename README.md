@@ -1,36 +1,106 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kodus Trust Center · Dead-simple Trust Hub
 
-## Getting Started
+Kodus’ trust center is a self-hosted, YAML-driven builder. Paste your security program into a single YAML document and instantly expose a polished trust portal with compliance badges, document requests, subprocessors, FAQs, and more—no paid SaaS, no vendor lock-in.
 
-First, run the development server:
+## Why this project?
+
+- **Own your data**: Everything lives in your repo/Supabase project. Deploy anywhere.
+- **YAML in, trust center out**: The public site and admin builder render directly from one source of truth.
+- **Fast to operate**: Sales and security teams can edit the YAML, save, and immediately refresh the public page.
+- **Real document requests**: Visitors request sensitive documents via email + admin review.
+- **Lego layout**: Sections can be hidden or set to `half` / `full` width for flexible compositions.
+
+## Features
+
+| Capability | Details |
+| --- | --- |
+| YAML builder + live preview | Admin area with copy/reset, Supabase-backed persistence, hide preview toggle. |
+| Public trust center | Theming (`light`/`dark`), company logo, hero commitments, metrics, compliance cards, policies, documents, infra, monitoring, updates, FAQs accordion, subprocessors, contacts. |
+| Document requests | Modal collects work email/context → stored via Supabase (`document_requests` table). |
+| Admin dashboard | Tabs for requests + YAML editor, GitHub SSO (NextAuth). |
+| API endpoints | `/api/requests` (list/create) + `/api/trust-config` (load/save YAML). |
+
+## Tech Stack
+
+- **Next.js 16 / App Router** + TypeScript
+- **Supabase** for storing requests + YAML config
+- **Shadcn/ui + Tailwind CSS v4** for styling
+- **NextAuth (GitHub provider)** for admin access
+- **Zod + js-yaml** for schema validation
+
+## Quick Start
+
+> Prereqs: Node 18+, npm. Optional: Supabase project + GitHub OAuth app.
 
 ```bash
+npm install
+cp .env.example .env          # fill in NEXTAUTH_*, GITHUB_*, SUPABASE_* env vars
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create the Supabase tables (SQL):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```sql
+create table public.document_requests (
+  id text primary key,
+  email text not null,
+  document text not null,
+  company text not null,
+  message text,
+  status text not null default 'pending',
+  created_at timestamptz not null default now()
+);
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+create table public.trust_configs (
+  id text primary key,
+  yaml text not null,
+  updated_at timestamptz not null default now()
+);
+```
 
-## Learn More
+Seed `trust_configs` with `id='default'` (or just save via the admin UI).
 
-To learn more about Next.js, take a look at the following resources:
+## YAML Schema Overview
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Everything lives under a single document. The schema (in `docs/trust-center-schema.md`) includes:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `theme`: `"light"` or `"dark"`
+- `layout`: map of section → `"full"` / `"half"`
+- `company`, `hero`, `metrics`, `compliance`, `documents`, `policies`
+- `infrastructure`, `monitoring`, `updates`, `faqs`
+- `subprocessors` (with optional `subprocessorsLink`)
+- `contacts`
 
-## Deploy on Vercel
+Delete a section to hide its block entirely. Example snippet:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```yaml
+theme: dark
+layout:
+  compliance: half
+  policies: half
+  documents: full
+subprocessors:
+  - name: AWS
+    category: IT infrastructure
+    location: United States
+    logo: https://.../aws.svg
+    description: Primary cloud provider.
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+
+1. Push this repo to your Git provider.
+2. Deploy to Vercel, Fly, Render, or any Next.js-compatible host.
+3. Configure env vars on the platform (NEXTAUTH_URL, SUPABASE_URL, keys, etc.).
+4. Ensure Supabase tables exist and row-level security allows your service-role key.
+
+## Roadmap / Ideas
+
+- Webhook integrations (Slack/email) for new document requests.
+- Versioned YAML history + diff view.
+- Multiple trust centers / multi-tenant mode.
+- Automated compliance evidence importers.
+
+## License
+
+MIT. Build your trust center, own the infra, and share the YAML freely. Contributions welcome!
