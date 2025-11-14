@@ -4,6 +4,8 @@ import { DEFAULT_TRUST_YAML, safeParseTrustCenter } from "@/lib/trust-config";
 import { getStoredTrustConfig } from "@/lib/trust-config-store";
 import { cn } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 async function loadTrustConfig() {
   let yaml = DEFAULT_TRUST_YAML;
 

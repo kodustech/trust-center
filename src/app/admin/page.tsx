@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BuilderPanel } from "@/components/trust/builder-panel";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Admin area | EzTrust",
@@ -63,12 +64,22 @@ export default async function AdminPage({ searchParams }: Props) {
         </div>
 
         <Tabs defaultValue={activeTab} className="space-y-6">
-          <TabsList className="bg-slate-900 text-slate-50">
-            <TabsTrigger value="requests">Requests</TabsTrigger>
-            <TabsTrigger value="builder">YAML editor</TabsTrigger>
+          <TabsList className="bg-slate-900/70 text-slate-50 ring-1 ring-white/5">
+            <TabsTrigger
+              value="requests"
+              className="data-[state=inactive]:text-slate-400 data-[state=inactive]:hover:text-slate-200"
+            >
+              Requests
+            </TabsTrigger>
+            <TabsTrigger
+              value="builder"
+              className="data-[state=inactive]:text-slate-400 data-[state=inactive]:hover:text-slate-200"
+            >
+              YAML editor
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="requests" className="space-y-6">
-            <Card className="border border-slate-800 bg-slate-900/70 text-slate-50">
+            <Card className="border border-slate-800 bg-slate-900/80 text-slate-50 shadow-lg shadow-black/20">
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-base font-semibold">
                   {requests.length} {requests.length === 1 ? "request" : "requests"}
@@ -82,7 +93,7 @@ export default async function AdminPage({ searchParams }: Props) {
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
-                      <TableHeader>
+                      <TableHeader className="bg-slate-900/60 text-slate-300">
                         <TableRow>
                           <TableHead>Document</TableHead>
                           <TableHead>Email</TableHead>
@@ -94,23 +105,26 @@ export default async function AdminPage({ searchParams }: Props) {
                       </TableHeader>
                       <TableBody>
                         {requests.map((request) => (
-                          <TableRow key={request.id}>
-                            <TableCell className="font-medium">
+                          <TableRow key={request.id} className="border-slate-800">
+                            <TableCell className="font-medium text-slate-100">
                               {request.document}
                             </TableCell>
-                            <TableCell>{request.email}</TableCell>
-                            <TableCell>{request.company}</TableCell>
-                            <TableCell className="max-w-sm text-pretty">
+                            <TableCell className="text-slate-300">{request.email}</TableCell>
+                            <TableCell className="text-slate-300">{request.company}</TableCell>
+                            <TableCell className="max-w-sm text-pretty text-slate-400">
                               {request.message ?? "—"}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="text-slate-200">
                               {dateFormatter.format(new Date(request.createdAt))}
                             </TableCell>
                             <TableCell>
                               <Badge
-                                variant={
-                                  request.status === "pending" ? "secondary" : "outline"
-                                }
+                                className={cn(
+                                  "border-none px-3 py-1 text-xs font-semibold",
+                                  request.status === "pending"
+                                    ? "bg-amber-400 text-slate-900"
+                                    : "bg-emerald-400 text-slate-900"
+                                )}
                               >
                                 {request.status === "pending"
                                   ? "Pending"
