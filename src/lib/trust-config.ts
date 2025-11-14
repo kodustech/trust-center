@@ -57,10 +57,23 @@ const layoutSchema = z
   })
   .optional();
 
+const sectionKeyEnum = z.enum([
+  "documents",
+  "compliance",
+  "policies",
+  "infrastructure",
+  "monitoring",
+  "updates",
+  "faqs",
+  "subprocessors",
+  "contacts",
+]);
+
 export const trustCenterSchema = z.object({
   theme: z.enum(["light", "dark"]).default("light"),
   subprocessorsLink: z.string().url().optional(),
   layout: layoutSchema,
+  sections: z.array(sectionKeyEnum).optional(),
   company: z.object({
     name: z.string(),
     tagline: z.string(),

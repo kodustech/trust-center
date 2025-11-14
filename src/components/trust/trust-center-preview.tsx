@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   BadgeCheck,
   BookOpen,
@@ -25,8 +26,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-
-import type { ReactNode } from "react";
 
 type Props = {
   config: TrustCenterConfig;
@@ -54,6 +53,18 @@ type SectionBlock = {
   element: ReactNode;
 };
 
+const SECTION_KEYS: SectionKey[] = [
+  "documents",
+  "compliance",
+  "policies",
+  "infrastructure",
+  "monitoring",
+  "updates",
+  "faqs",
+  "subprocessors",
+  "contacts",
+];
+
 const DEFAULT_SECTION_LAYOUT: Record<SectionKey, LayoutSpan> = {
   documents: "full",
   compliance: "half",
@@ -65,6 +76,18 @@ const DEFAULT_SECTION_LAYOUT: Record<SectionKey, LayoutSpan> = {
   subprocessors: "full",
   contacts: "full",
 };
+
+const DEFAULT_SECTION_ORDER: SectionKey[] = [
+  "compliance",
+  "policies",
+  "documents",
+  "infrastructure",
+  "monitoring",
+  "updates",
+  "faqs",
+  "subprocessors",
+  "contacts",
+];
 
 export function TrustCenterPreview({
   config,
@@ -530,6 +553,39 @@ export function TrustCenterPreview({
     </Card>
   );
 
+  const layoutKeys = Object.keys(layoutConfig ?? {}).filter((key): key is SectionKey =>
+    SECTION_KEYS.includes(key as SectionKey)
+  );
+
+  const yamlOrderKeys = SECTION_KEYS.filter(
+    (key) => (config as Record<string, unknown>)[key] !== undefined
+  );
+
+  const sectionsOverride = (config.sections ?? []).filter((key): key is SectionKey =>
+    SECTION_KEYS.includes(key)
+  );
+
+  const orderedBlocks: SectionBlock[] = [];
+  const seen = new Set<SectionKey>();
+  const pushFromOrder = (keys: SectionKey[]) => {
+    keys.forEach((key) => {
+      if (seen.has(key)) return;
+      const block = sectionBlocks.find((section) => section.key === key);
+      if (block) {
+        orderedBlocks.push(block);
+        seen.add(key);
+      }
+    });
+  };
+
+  pushFromOrder(sectionsOverride);
+  pushFromOrder(layoutKeys);
+  pushFromOrder(yamlOrderKeys);
+  pushFromOrder(DEFAULT_SECTION_ORDER);
+  pushFromOrder(sectionBlocks.map((block) => block.key));
+
+  const blocksToRender = orderedBlocks;
+
   return (
     <div className={cn(isDark && "dark")}>
       <div className="space-y-5">
@@ -614,9 +670,9 @@ export function TrustCenterPreview({
           </CardContent>
         </Card>
 
-        {sectionBlocks.length > 0 && (
+        {blocksToRender.length > 0 && (
           <div className="grid gap-5 lg:grid-cols-2">
-            {sectionBlocks.map((section) => (
+            {blocksToRender.map((section) => (
               <div
                 key={section.key}
                 className={cn(section.span === "full" && "lg:col-span-2")}

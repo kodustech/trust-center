@@ -23,7 +23,7 @@ contacts:              # optional object
 | Key | Type | Description |
 | --- | --- | --- |
 | `theme` | `"light"` or `"dark"` | Controls the overall palette of the public trust center and builder preview. |
-| `layout.<section>` | `"full"` or `"half"` | Optional map that defines how each block should span on desktop. Sections without a layout entry fall back to sensible defaults (e.g., compliance/policies = half, documents = full). |
+| `layout.<section>` | `"full"` or `"half"` | Optional map that defines how each block should span on desktop **and** ordering. Keys are read in the order they appear in YAML; sections not listed fall back to their default order/width. |
 | `subprocessorsLink` | string (URL) | Optional external page for a full subprocessors list (shown as “View details”). |
 | `company.name` | string (required) | Company name shown in hero. |
 | `company.tagline` | string (required) | Short positioning sentence. |
