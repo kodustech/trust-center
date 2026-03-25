@@ -22,12 +22,8 @@ export async function getAdminSession(): Promise<AdminSession | null> {
   const session = await auth();
   if (!session?.user?.email) return null;
 
-  if (
-    ADMIN_EMAILS.length > 0 &&
-    !ADMIN_EMAILS.includes(session.user.email.toLowerCase())
-  ) {
-    return null;
-  }
+  if (ADMIN_EMAILS.length === 0) return null;
+  if (!ADMIN_EMAILS.includes(session.user.email.toLowerCase())) return null;
 
   return session as AdminSession;
 }
@@ -47,10 +43,11 @@ export async function requireAdminApi(): Promise<NextResponse | null> {
     return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 
-  if (
-    ADMIN_EMAILS.length > 0 &&
-    !ADMIN_EMAILS.includes(session.user.email.toLowerCase())
-  ) {
+  if (ADMIN_EMAILS.length === 0) {
+    return NextResponse.json({ error: "Forbidden. No admins configured." }, { status: 403 });
+  }
+
+  if (!ADMIN_EMAILS.includes(session.user.email.toLowerCase())) {
     return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 
