@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { listRequests } from "@/lib/request-store";
 import { getStoredTrustConfig } from "@/lib/trust-config-store";
-import { auth } from "@/lib/auth";
+import { getAdminSession } from "@/lib/require-admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -28,8 +28,8 @@ type Props = {
 };
 
 export default async function AdminPage({ searchParams }: Props) {
-  const session = await auth();
-  if (!session?.user) {
+  const session = await getAdminSession();
+  if (!session) {
     redirect("/login");
   }
 

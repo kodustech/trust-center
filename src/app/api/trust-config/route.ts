@@ -4,11 +4,15 @@ import {
   getStoredTrustConfig,
   saveTrustConfig,
 } from "@/lib/trust-config-store";
+import { requireAdminApi } from "@/lib/require-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const config = await getStoredTrustConfig();
     return NextResponse.json({ data: config });
@@ -22,6 +26,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const payload = await request.json();
     const yaml = typeof payload.yaml === "string" ? payload.yaml : "";
@@ -47,4 +54,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

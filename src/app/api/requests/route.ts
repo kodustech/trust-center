@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { addRequest, listRequests } from "@/lib/request-store";
+import { requireAdminApi } from "@/lib/require-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,11 +13,16 @@ const requestSchema = z.object({
   message: z.string().max(500).optional(),
 });
 
+// Only admins can list all requests
 export async function GET() {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   const data = await listRequests();
   return NextResponse.json({ data });
 }
 
+// Public: anyone can submit a document request
 export async function POST(request: Request) {
   try {
     const payload = await request.json();
