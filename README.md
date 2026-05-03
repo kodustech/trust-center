@@ -1,106 +1,62 @@
-# Kodus Trust Center · Dead-simple Trust Hub
+# trust-center-static
 
-Kodus’ trust center is a self-hosted, YAML-driven builder. Paste your security program into a single YAML document and instantly expose a polished trust portal with compliance badges, document requests, subprocessors, FAQs, and more—no paid SaaS, no vendor lock-in.
+A static, YAML-driven trust center. Edit one file, run `yarn build`, drop the `out/` directory on any static host. No database, no auth provider, no server-side runtime.
 
-## Why this project?
+Forked from [kodustech/trust-center](https://github.com/kodustech/trust-center) — credit to the Kodus team for the design system, schema, and the polished rendering layer that does the heavy lifting.
 
-- **Own your data**: Everything lives in your repo/Supabase project. Deploy anywhere.
-- **YAML in, trust center out**: The public site and admin builder render directly from one source of truth.
-- **Fast to operate**: Sales and security teams can edit the YAML, save, and immediately refresh the public page.
-- **Real document requests**: Visitors request sensitive documents via email + admin review.
-- **Lego layout**: Sections can be hidden or set to `half` / `full` width for flexible compositions.
+## What's different from upstream
 
-## Features
+| | Upstream (`kodustech/trust-center`) | This fork |
+| --- | --- | --- |
+| Storage | Supabase (Postgres) for YAML and document requests | A single `data/trust.yaml` file in the repo |
+| Auth | NextAuth + GitHub SSO, admin allowlist | None |
+| Admin UI | YAML editor with live preview, request inbox | None |
+| Document requests | Modal posts to `/api/requests`, stored in Supabase | Modal removed; "Request access" opens a `mailto:` draft |
+| Runtime | Next.js with Node server (admin routes, API routes) | Next.js `output: "export"` — pure static HTML/CSS/JS |
+| Deploy targets | Anywhere that runs Node (Vercel, Fly, etc.) | Anywhere that serves files (Cloudflare Pages, S3, GitHub Pages, Netlify…) |
 
-| Capability | Details |
-| --- | --- |
-| YAML builder + live preview | Admin area with copy/reset, Supabase-backed persistence, hide preview toggle. |
-| Public trust center | Theming (`light`/`dark`), company logo, hero commitments, metrics, compliance cards, policies, documents, infra, monitoring, updates, FAQs accordion, subprocessors, contacts. |
-| Document requests | Modal collects work email/context → stored via Supabase (`document_requests` table). |
-| Admin dashboard | Tabs for requests + YAML editor, GitHub SSO (NextAuth). |
-| API endpoints | `/api/requests` (list/create) + `/api/trust-config` (load/save YAML). |
+The public render path — schema, theming, every section component — is unchanged from upstream.
 
-## Tech Stack
+## How it works
 
-- **Next.js 16 / App Router** + TypeScript
-- **Supabase** for storing requests + YAML config
-- **Shadcn/ui + Tailwind CSS v4** for styling
-- **NextAuth (GitHub provider)** for admin access
-- **Zod + js-yaml** for schema validation
+1. Edit [`data/trust.yaml`](data/trust.yaml). The schema is defined in [`src/lib/trust-config.ts`](src/lib/trust-config.ts) and documented in [`docs/trust-center-schema.md`](docs/trust-center-schema.md).
+2. Run `yarn build`. The page is rendered at build time and emitted to `out/` as static HTML.
+3. Deploy `out/` to any static host.
 
-## Quick Start
+If `data/trust.yaml` is missing or fails Zod validation, the build throws — no silent fallback to placeholder content.
 
-> Prereqs: Node 18+, npm. Optional: Supabase project + GitHub OAuth app.
+## Local development
 
 ```bash
-npm install
-cp .env.example .env          # fill in NEXTAUTH_*, GITHUB_*, SUPABASE_* env vars
-npm run dev
+yarn install
+yarn dev
+# open http://localhost:3000
 ```
 
-Create the Supabase tables (SQL):
+To preview the production build locally:
 
-```sql
-create table public.document_requests (
-  id text primary key,
-  email text not null,
-  document text not null,
-  company text not null,
-  message text,
-  status text not null default 'pending',
-  created_at timestamptz not null default now()
-);
-
-create table public.trust_configs (
-  id text primary key,
-  yaml text not null,
-  updated_at timestamptz not null default now()
-);
+```bash
+yarn build
+npx serve out
 ```
 
-Seed `trust_configs` with `id='default'` (or just save via the admin UI).
+## Document requests
 
-## YAML Schema Overview
+The "Request access" button on `request`-only documents opens a prefilled `mailto:` draft. The recipient address comes from the top-level `contactEmail` field in `data/trust.yaml`, falling back to `contacts.email`. Set whichever you prefer (or both).
 
-Everything lives under a single document. The schema (in `docs/trust-center-schema.md`) includes:
+If your request volume grows past what email can handle, the cleanest upgrade is to wire the dialog back in and POST to a serverless function (Resend, Cloudflare Workers, etc.). That's out of scope for this fork.
 
-- `theme`: `"light"` or `"dark"`
-- `layout`: map of section → `"full"` / `"half"`
-- `company`, `hero`, `metrics`, `compliance`, `documents`, `policies`
-- `infrastructure`, `monitoring`, `updates`, `faqs`
-- `subprocessors` (with optional `subprocessorsLink`)
-- `contacts`
+## Stack
 
-Delete a section to hide its block entirely. Example snippet:
-
-```yaml
-theme: dark
-layout:
-  compliance: half
-  policies: half
-  documents: full
-subprocessors:
-  - name: AWS
-    category: IT infrastructure
-    location: United States
-    logo: https://.../aws.svg
-    description: Primary cloud provider.
-```
-
-## Deployment
-
-1. Push this repo to your Git provider.
-2. Deploy to Vercel, Fly, Render, or any Next.js-compatible host.
-3. Configure env vars on the platform (NEXTAUTH_URL, SUPABASE_URL, keys, etc.).
-4. Ensure Supabase tables exist and row-level security allows your service-role key.
-
-## Roadmap / Ideas
-
-- Webhook integrations (Slack/email) for new document requests.
-- Versioned YAML history + diff view.
-- Multiple trust centers / multi-tenant mode.
-- Automated compliance evidence importers.
+- Next.js 16 (App Router) with `output: "export"`
+- TypeScript, Zod, js-yaml
+- Tailwind CSS v4 + shadcn/ui (accordion, badge, button, card)
+- Radix UI primitives (accordion, slot)
 
 ## License
 
-MIT. Build your trust center, own the infra, and share the YAML freely. Contributions welcome!
+MIT — see [LICENSE](./LICENSE). Original copyright held by Kodus per the upstream README.
+
+## Contributing
+
+PRs welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md). Issues and pull requests should be filed against this fork; for upstream issues, file at [kodustech/trust-center](https://github.com/kodustech/trust-center/issues).

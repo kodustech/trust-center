@@ -22,9 +22,10 @@ contacts:              # optional object
 
 | Key | Type | Description |
 | --- | --- | --- |
-| `theme` | `"light"` or `"dark"` | Controls the overall palette of the public trust center and builder preview. |
+| `theme` | `"light"` or `"dark"` | Controls the overall palette of the public trust center. |
 | `layout.<section>` | `"full"` or `"half"` | Optional map that defines how each block should span on desktop **and** ordering. Keys are read in the order they appear in YAML; sections not listed fall back to their default order/width. |
 | `subprocessorsLink` | string (URL) | Optional external page for a full subprocessors list (shown as “View details”). |
+| `contactEmail` | string (email) | Recipient for the "Request access" mailto on `request`-only documents. Falls back to `contacts.email` if unset. |
 | `company.name` | string (required) | Company name shown in hero. |
 | `company.tagline` | string (required) | Short positioning sentence. |
 | `company.description` | string (required) | Paragraph describing the trust program. |
@@ -72,10 +73,10 @@ contacts:
 
 ## Full example
 
-See `DEFAULT_TRUST_YAML` in `src/lib/trust-config.ts` for a comprehensive sample that uses every section.
+See [`data/trust.yaml`](../data/trust.yaml) for a comprehensive sample that uses every section.
 
 ## Tips
 
 1. **Hide sections** by deleting them from the YAML; the parser defaults to empty arrays/objects.
-2. **Validate before saving**: the builder shows parsing errors inline, and the API also validates using Zod.
-3. **Versioning**: keep copies of older YAML revisions using git or Supabase history so you can roll back quickly.
+2. **Validate before deploying**: `yarn build` runs the YAML through Zod and throws on validation errors, so a broken file fails CI rather than reaching production.
+3. **Versioning**: commit `data/trust.yaml` to git — that's your audit trail and rollback.

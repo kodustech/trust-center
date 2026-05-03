@@ -1,36 +1,18 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import type { Metadata } from "next";
 import { TrustCenterPublic } from "@/components/trust/trust-center-public";
-import { DEFAULT_TRUST_YAML, safeParseTrustCenter } from "@/lib/trust-config";
-import { getStoredTrustConfig } from "@/lib/trust-config-store";
+import { safeParseTrustCenter } from "@/lib/trust-config";
 import { cn } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
-
 async function loadTrustConfig() {
-  let yaml = DEFAULT_TRUST_YAML;
-
-  try {
-    const stored = await getStoredTrustConfig();
-    if (stored?.yaml) {
-      yaml = stored.yaml;
-    }
-  } catch (error) {
-    console.error("Falling back to default trust center config:", error);
-  }
-
+  const yamlPath = path.join(process.cwd(), "data", "trust.yaml");
+  const yaml = await readFile(yamlPath, "utf-8");
   const parsed = safeParseTrustCenter(yaml);
-  if (parsed.ok) {
-    return parsed.data;
+  if (!parsed.ok) {
+    throw new Error(`Failed to parse data/trust.yaml: ${parsed.error}`);
   }
-
-  const fallbackParsed = safeParseTrustCenter(DEFAULT_TRUST_YAML);
-  if (!fallbackParsed.ok) {
-    throw new Error(
-      `Failed to load trust center configuration: ${parsed.error}`
-    );
-  }
-
-  return fallbackParsed.data;
+  return parsed.data;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
